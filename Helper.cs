@@ -69,22 +69,28 @@ public static List<string> ObtenerValoresPropiedades<T>(T datos, IEnumerable<str
   /// Una cadena XML que representa la lista de objetos, con cada elemento envuelto en un nodo "ROW"
   /// dentro de un nodo raíz "ROOT".
   /// </returns>
-  public static string ConvertListToXml<T>(List<T> lst)
-  {
-      var xmlDocument = new XElement("ROOT");
-      var type = typeof(T);
+   public static string ConvertListToXml<T>(List<T> lst)
+   {
+       var xmlDocument = new XElement("ROOT");
+       var type = typeof(T);
 
-      foreach (var item in lst)
-      {
-          var element = new XElement("ROW");
+       foreach (var item in lst)
+       {
+           var element = new XElement("ROW");
 
-          foreach (var prop in type.GetProperties())
-          {
-              element.Add(new XElement(prop.Name, prop.GetValue(item, null)?.ToString() ?? string.Empty));
-          }
+           foreach (var prop in type.GetProperties())
+           {
+               var value = prop.GetValue(item, null);
+               if (value != null)
+               {
+                   var xElement = new XElement(prop.Name);
+                   xElement.SetValue(value);
+                   element.Add(xElement);
+               }
+           }
 
-          xmlDocument.Add(element);
-      }
+           xmlDocument.Add(element);
+       }
 
-      return xmlDocument.ToString();
-  }
+       return xmlDocument.ToString();
+   }
