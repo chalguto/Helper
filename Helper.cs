@@ -28,28 +28,63 @@
  // var lstPropiedades = new[] { "tipo", "comentario" };
  // var valores = ObtenerValoresPropiedades(datos, lstPropiedades);
  
-        /// <summary>
-        /// Obtiene los valores de propiedades específicas de un objeto genérico, siempre que dichas propiedades existan y no estén vacías.
-        /// </summary>
-        /// <typeparam name="T">Tipo del objeto del cual se extraerán los valores de las propiedades.</typeparam>
-        /// <param name="datos">Instancia del objeto desde el cual se obtendrán los valores.</param>
-        /// <param name="lstPropiedades">Lista de nombres de propiedades que se desean consultar.</param>
-        /// <returns>Una lista de cadenas que contiene los valores no nulos y no vacíos de las propiedades especificadas.</returns>
-        public static List<string> ObtenerValoresPropiedades<T>(T datos, IEnumerable<string> lstPropiedades)
+/// <summary>
+/// Obtiene los valores de propiedades específicas de un objeto genérico, siempre que dichas propiedades existan y no estén vacías.
+/// </summary>
+/// <typeparam name="T">Tipo del objeto del cual se extraerán los valores de las propiedades.</typeparam>
+/// <param name="datos">Instancia del objeto desde el cual se obtendrán los valores.</param>
+/// <param name="lstPropiedades">Lista de nombres de propiedades que se desean consultar.</param>
+/// <returns>Una lista de cadenas que contiene los valores no nulos y no vacíos de las propiedades especificadas.</returns>
+public static List<string> ObtenerValoresPropiedades<T>(T datos, IEnumerable<string> lstPropiedades)
+{
+    var valores = new List<string>();
+    var tipo = typeof(T);
+
+    foreach (var prop in lstPropiedades)
+    {
+        var propiedad = tipo.GetProperty(prop);
+        var valor = propiedad.GetValue(datos) as string;
+
+        if (!string.IsNullOrEmpty(valor))
         {
-            var valores = new List<string>();
-            var tipo = typeof(T);
-
-            foreach (var prop in lstPropiedades)
-            {
-                var propiedad = tipo.GetProperty(prop);
-                var valor = propiedad.GetValue(datos) as string;
-
-                if (!string.IsNullOrEmpty(valor))
-                {
-                    valores.Add(valor);
-                }
-            }
-
-            return valores;
+            valores.Add(valor);
         }
+    }
+
+    return valores;
+}
+
+
+  /// <summary>
+  /// Convierte una lista genérica de objetos en una cadena XML con una estructura simple,
+  /// donde cada objeto se representa como un nodo "ROW" y cada propiedad como un subelemento.
+  /// </summary>
+  /// <typeparam name="T">
+  /// Tipo de los objetos contenidos en la lista.
+  /// </typeparam>
+  /// <param name="lst">
+  /// Lista de objetos que se desea convertir a formato XML.
+  /// </param>
+  /// <returns>
+  /// Una cadena XML que representa la lista de objetos, con cada elemento envuelto en un nodo "ROW"
+  /// dentro de un nodo raíz "ROOT".
+  /// </returns>
+  public static string ConvertListToXml<T>(List<T> lst)
+  {
+      var xmlDocument = new XElement("ROOT");
+      var type = typeof(T);
+
+      foreach (var item in lst)
+      {
+          var element = new XElement("ROW");
+
+          foreach (var prop in type.GetProperties())
+          {
+              element.Add(new XElement(prop.Name, prop.GetValue(item, null)?.ToString() ?? string.Empty));
+          }
+
+          xmlDocument.Add(element);
+      }
+
+      return xmlDocument.ToString();
+  }
